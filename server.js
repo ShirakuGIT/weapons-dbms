@@ -4,7 +4,7 @@ const cors = require("cors");
 
 const app = express();
 
-const db = require('./app/models/');
+const dsb = require('./app/models/');
 const Role = db.role;
 
 
