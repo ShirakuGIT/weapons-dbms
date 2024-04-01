@@ -1,0 +1,36 @@
+{
+  "name": "user-auth",
+  "version": "1.0.0",
+  "description": "node.js json web tokens auth with postgresql",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShirakuGIT/user-auth.git"
+  },
+  "keywords": [
+    "node",
+    "js",
+    "express",
+    "jwt",
+    "postgresql",
+    "authentication"
+  ],
+  "author": "shiraku",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ShirakuGIT/user-auth/issues"
+  },
+  "homepage": "https://github.com/ShirakuGIT/user-auth#readme",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.11.3",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.37.1"
+  }
+}
