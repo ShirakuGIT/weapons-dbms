@@ -25,6 +25,9 @@ var corsOptions = {
 // routes
 require('./app/routes/auth.routes')(app);
 require('./app/routes/user.routes')(app);
+require('./app/routes/weapon.routes')(app); // Weapon routes
+require('./app/routes/transaction.routes')(app); // Transaction routes
+
 
 app.get("/", (req, res) => {
     res.json({ message: "Hello!" });
