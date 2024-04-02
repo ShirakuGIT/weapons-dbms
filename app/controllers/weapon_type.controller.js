@@ -3,22 +3,27 @@ const db = require("../models");
 const WeaponType = db.weaponType;
 
 exports.create = (req, res) => {
-    const { TypeName, Description } = req.body;
+    const { type_name, description } = req.body; // Use the correct field names here
+
     // Validate request
-    if (!TypeName || !Description) {
-        res.status(400).send({ message: "TypeName and Description are required fields." });
+    if (!type_name || !description) {
+        res.status(400).send({ message: "type_name and description are required fields." });
         return;
     }
 
     // Create a Weapon Type
-    WeaponType.create({ TypeName, Description })
-        .then(weaponType => {
-            res.status(201).send(weaponType);
-        })
-        .catch(err => {
-            res.status(500).send({ message: err.message || "Some error occurred while creating the Weapon Type." });
-        });
+    WeaponType.create({ 
+        type_name, // Match the field name in the model
+        description // Match the field name in the model
+    })
+    .then(weaponType => {
+        res.status(201).send(weaponType);
+    })
+    .catch(err => {
+        res.status(500).send({ message: err.message || "Some error occurred while creating the Weapon Type." });
+    });
 };
+
 
 exports.findAll = (req, res) => {
     // Find all Weapon Types

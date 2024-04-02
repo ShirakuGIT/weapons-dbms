@@ -1,9 +1,9 @@
 // weapon_type.routes.js
-const weaponTypes = require("../controllers/weaponType.controller");
+const weaponTypes = require("../controllers/weapon_type.controller");
 
 module.exports = function (app) {
     // Create a new Weapon Type
-    app.post("/api/weaponTypes", weaponTypes.create);
+    app.post("/api/weaponTypes/create", weaponTypes.create);
 
     // Retrieve all Weapon Types
     app.get("/api/weaponTypes", weaponTypes.findAll);

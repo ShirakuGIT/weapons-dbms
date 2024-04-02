@@ -27,7 +27,7 @@ module.exports = (sequelize, Sequelize) => {
         },
         current_location: {
             type: Sequelize.STRING
-        },
+        },  
         status: {
             type: Sequelize.STRING,
             defaultValue: 'In Stock'

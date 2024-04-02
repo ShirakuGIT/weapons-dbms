@@ -3,7 +3,7 @@ const weapons = require("../controllers/weapon.controller");
 
 module.exports = function (app) {
     // Create a new Weapon
-    app.post("/api/weapons", weapons.create);
+    app.post("/api/weapons/create", weapons.create);
 
     // Retrieve all Weapons
     app.get("/api/weapons", weapons.findAll);

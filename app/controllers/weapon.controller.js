@@ -2,36 +2,33 @@
 const db = require("../models");
 const Weapon = db.weapon;
 
-// Create and save a new Weapon
+// Assuming your create function looks something like this
 exports.create = (req, res) => {
-    const { TypeID, SerialNumber, Manufacturer, Model, Caliber, CurrentLocation, Status } = req.body;
+    // Extract type_id, serial_number, and other required fields from the request body
+    const { type_id, serial_number, manufacturer, model, caliber, current_location, status } = req.body;
 
     // Validate request
-    if (!TypeID || !SerialNumber || !Manufacturer || !Model || !Caliber || !CurrentLocation || !Status) {
-        res.status(400).send({ message: "All fields are required." });
+    if (!type_id || !serial_number) {
+        res.status(400).send({ message: "type_id and serial_number are required fields." });
         return;
     }
 
     // Create a Weapon
-    const weapon = {
-        TypeID,
-        SerialNumber,
-        Manufacturer,
-        Model,
-        Caliber,
-        CurrentLocation,
-        Status
-    };
-
-    Weapon.create(weapon)
-        .then(data => {
-            res.send(data);
-        })
-        .catch(err => {
-            res.status(500).send({
-                message: err.message || "Some error occurred while creating the Weapon."
-            });
-        });
+    Weapon.create({
+        type_id,
+        serial_number,
+        manufacturer,
+        model,
+        caliber,
+        current_location,
+        status
+    })
+    .then(weapon => {
+        res.status(201).send(weapon);
+    })
+    .catch(err => {
+        res.status(500).send({ message: err.message || "Some error occurred while creating the Weapon." });
+    });
 };
 
 // Retrieve all Weapons from the database
