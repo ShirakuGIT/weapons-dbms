@@ -18,7 +18,7 @@ module.exports = (sequelize, Sequelize) => {
             allowNull: false,
             references: {
                 model: 'users',
-                key: 'user_id'
+                key: 'id'
             }
         },
         transaction_type: {
