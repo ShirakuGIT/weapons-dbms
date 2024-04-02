@@ -1,11 +1,19 @@
-module.exports = app => {
-    const transactions = require("../controllers/transaction.controller.js");
-    var router = require("express").Router();
+// transaction.routes.js
+const transactions = require("../controllers/transaction.controller");
 
-    // Record a new Transaction
-    router.post("/", transactions.create);
+module.exports = function (app) {
+    // Create a new Transaction
+    app.post("/api/transactions", transactions.create);
 
-    // ... other transaction routes ...
+    // Retrieve all Transactions
+    app.get("/api/transactions", transactions.findAll);
 
-    app.use('/api/transactions', router);
+    // Retrieve a single Transaction by id
+    app.get("/api/transactions/:transaction_id", transactions.findOne);
+
+    // Update a Transaction by id
+    app.put("/api/transactions/:transaction_id", transactions.update);
+
+    // Delete a Transaction by id
+    app.delete("/api/transactions/:transaction_id", transactions.delete);
 };
