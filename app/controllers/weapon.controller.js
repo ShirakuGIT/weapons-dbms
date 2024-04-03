@@ -60,28 +60,40 @@ exports.findOne = (req, res) => {
 };
 
 // Update a Weapon by the id in the request
-exports.update = (req, res) => {
+exports.update = async (req, res) => {
     const id = req.params.id;
+    const statusBeforeUpdate = (await Weapon.findByPk(id)).status;  // Assuming you have a status column in your weapons table
 
     Weapon.update(req.body, {
-        where: { id: id }
+        where: { weapon_id: id }
     })
-        .then(num => {
-            if (num == 1) {
-                res.send({
-                    message: "Weapon was updated successfully."
-                });
-            } else {
-                res.send({
-                    message: `Cannot update Weapon with id=${id}. Maybe Weapon was not found or req.body is empty!`
+    .then(async (num) => {
+        if (num == 1) {
+            // If the weapon's status has changed, create a transaction log
+            if (req.body.status && req.body.status !== statusBeforeUpdate) {
+                await transactionController.create({
+                    weapon_id: id,
+                    user_id: req.userId,  // The userId should come from session or token verification
+                    transaction_type: 'Status Update',  // Or any other logic you have for determining transaction type
+                    timestamp: new Date(),  // You can omit this if you rely on the default value
+                    notes: `Status changed from ${statusBeforeUpdate} to ${req.body.status}`
                 });
             }
-        })
-        .catch(err => {
-            res.status(500).send({
-                message: "Error updating Weapon with id=" + id
+
+            res.send({
+                message: "Weapon was updated successfully."
             });
+        } else {
+            res.send({
+                message: `Cannot update Weapon with id=${id}. Maybe Weapon was not found or req.body is empty!`
+            });
+        }
+    })
+    .catch(err => {
+        res.status(500).send({
+            message: "Error updating Weapon with id=" + id
         });
+    });
 };
 
 // Delete a Weapon with the specified id in the request

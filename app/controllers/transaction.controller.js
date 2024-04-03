@@ -3,32 +3,17 @@ const db = require("../models");
 const Transaction = db.transaction;
 
 // Create and save a new Transaction
-exports.create = (req, res) => {
-    const { WeaponID, UserID, TransactionType, Timestamp } = req.body;
-
-    // Validate request
-    if (!WeaponID || !UserID || !TransactionType || !Timestamp) {
-        res.status(400).send({ message: "All fields are required." });
-        return;
+exports.create = async (transactionData) => {
+    try {
+        const transaction = await Transaction.create(transactionData);
+        console.log(`Transaction logged: ${transaction}`);
+        // You might not want to send a response here, as this method is used internally.
+        // Instead, you could return the transaction data or a success indicator.
+        return transaction;
+    } catch (err) {
+        console.error(`Error creating transaction: ${err.message}`);
+        // Handle the error appropriately
     }
-
-    // Create a Transaction
-    const transaction = {
-        WeaponID,
-        UserID,
-        TransactionType,
-        Timestamp
-    };
-
-    Transaction.create(transaction)
-        .then(data => {
-            res.send(data);
-        })
-        .catch(err => {
-            res.status(500).send({
-                message: err.message || "Some error occurred while creating the Transaction."
-            });
-        });
 };
 
 // Retrieve all Transactions from the database
