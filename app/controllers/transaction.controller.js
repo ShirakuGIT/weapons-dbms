@@ -4,15 +4,21 @@ const Transaction = db.transaction;
 
 // Create and save a new Transaction
 exports.create = async (transactionData) => {
+    console.log("Hello whatsup!");
     try {
-        const transaction = await Transaction.create(transactionData);
+        const transaction = await Transaction.create({
+            weapon_id: transactionData.weapon_id,
+            user_id: transactionData.user_id,
+            transaction_type: transactionData.transaction_type,
+            timestamp: transactionData.timestamp,
+            notes: transactionData.notes
+        });
         console.log(`Transaction logged: ${transaction}`);
-        // You might not want to send a response here, as this method is used internally.
-        // Instead, you could return the transaction data or a success indicator.
         return transaction;
     } catch (err) {
         console.error(`Error creating transaction: ${err.message}`);
-        // Handle the error appropriately
+        // Handle the error appropriately, such as throwing an exception or returning an error message
+        throw new Error(`Error creating transaction: ${err.message}`);
     }
 };
 

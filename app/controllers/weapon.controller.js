@@ -1,6 +1,8 @@
 // weapon.controller.js
 const db = require("../models");
 const Weapon = db.weapon;
+const transactionController = require("../controllers/transaction.controller");
+
 
 // Assuming your create function looks something like this
 exports.create = (req, res) => {
@@ -59,42 +61,57 @@ exports.findOne = (req, res) => {
         });
 };
 
-// Update a Weapon by the id in the request
 exports.update = async (req, res) => {
-    const id = req.params.id;
-    const statusBeforeUpdate = (await Weapon.findByPk(id)).status;  // Assuming you have a status column in your weapons table
+    const id = parseInt(req.params.weapon_id, 10); // Parse the weapon_id to integer    
+    console.log(id);
+    try {
+        const weaponToUpdate = await Weapon.findByPk(id);
+        console.log(`Updating weapon with ID: ${id}`);
 
-    Weapon.update(req.body, {
-        where: { weapon_id: id }
-    })
-    .then(async (num) => {
-        if (num == 1) {
-            // If the weapon's status has changed, create a transaction log
-            if (req.body.status && req.body.status !== statusBeforeUpdate) {
-                await transactionController.create({
-                    weapon_id: id,
-                    user_id: req.userId,  // The userId should come from session or token verification
-                    transaction_type: 'Status Update',  // Or any other logic you have for determining transaction type
-                    timestamp: new Date(),  // You can omit this if you rely on the default value
-                    notes: `Status changed from ${statusBeforeUpdate} to ${req.body.status}`
-                });
-            }
+        if (!weaponToUpdate) {
+            console.log(`Weapon with id=${id} was not found.`);
+            return res.status(404).send({
+                message: `Weapon with id=${id} was not found.`
+            });
+        }
 
+        const statusBeforeUpdate = weaponToUpdate.status;
+        console.log(`Previous status: ${statusBeforeUpdate}`);
+
+        const [num] = await Weapon.update(req.body, {
+            where: { weapon_id: id }
+        });
+
+        console.log(`Logging transaction...`);
+        await transactionController.create({
+            weapon_id: id,
+            user_id: req.body.user_id, // Make sure this is correctly populated
+            transaction_type: 'Status Update',
+            timestamp: new Date(),
+            notes: `Status changed from ${statusBeforeUpdate} to ${req.body.status}`,
+        });
+
+        if (num === 1) {
+            console.log(`Weapon with ID: ${id} was updated successfully.`);
             res.send({
                 message: "Weapon was updated successfully."
             });
         } else {
+            console.log(`No changes made to the weapon with ID: ${id}.`);
             res.send({
-                message: `Cannot update Weapon with id=${id}. Maybe Weapon was not found or req.body is empty!`
+                message: `Cannot update Weapon with id=${id}.`
             });
         }
-    })
-    .catch(err => {
+    } catch (err) {
+        console.error(`Error updating weapon with ID: ${id}`, err);
         res.status(500).send({
-            message: "Error updating Weapon with id=" + id
+            message: `Error updating Weapon with id=${id}.`
         });
-    });
+    }
 };
+
+
+
 
 // Delete a Weapon with the specified id in the request
 exports.delete = (req, res) => {
