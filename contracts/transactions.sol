@@ -14,7 +14,6 @@ contract WeaponRegistry {
         uint timestamp,
         string status
     );
-    event WeaponDecommissioned(uint indexed weaponId);
 
     struct Weapon {
         uint weaponId;
@@ -37,6 +36,7 @@ contract WeaponRegistry {
 
     Weapon[] public weapons;
     WeaponStatus[] public statuses;
+    mapping(string => bool) private serialNumberExists; // Tracks if a serial number is already registered
 
     function registerWeapon(
         uint _typeId,
@@ -47,6 +47,10 @@ contract WeaponRegistry {
         string memory _currentLocation,
         string memory _status
     ) public returns (uint) {
+        require(
+            !serialNumberExists[_serialNumber],
+            "Serial number already registered."
+        ); // Check for duplicate serial number
         uint newWeaponId = weapons.length + 1;
         weapons.push(
             Weapon(
@@ -60,15 +64,7 @@ contract WeaponRegistry {
                 _status
             )
         );
-        statuses.push(
-            WeaponStatus(
-                newWeaponId,
-                0, // Assuming system or admin user ID, adjust as necessary
-                "Registration",
-                block.timestamp,
-                _status
-            )
-        );
+        serialNumberExists[_serialNumber] = true; // Mark this serial number as registered
         emit WeaponRegistered(newWeaponId, _typeId, _serialNumber);
         return newWeaponId;
     }
@@ -81,9 +77,11 @@ contract WeaponRegistry {
     ) public {
         require(
             _weaponId > 0 && _weaponId <= weapons.length,
-            "Weapon does not exist."
+            "Weapon ID does not exist."
         );
-        Weapon storage weapon = weapons[_weaponId - 1];
+        uint index = _weaponId - 1;
+
+        Weapon storage weapon = weapons[index];
         weapon.status = _newStatus;
 
         statuses.push(
@@ -102,25 +100,5 @@ contract WeaponRegistry {
             block.timestamp,
             _newStatus
         );
-    }
-
-    function decommissionWeapon(uint _weaponId) public {
-        require(
-            _weaponId > 0 && _weaponId <= weapons.length,
-            "Weapon does not exist."
-        );
-        Weapon storage weapon = weapons[_weaponId - 1];
-        weapon.status = "Decommissioned";
-
-        statuses.push(
-            WeaponStatus(
-                _weaponId,
-                0, // Assuming system or admin user ID, adjust as necessary
-                "Decommission",
-                block.timestamp,
-                "Decommissioned"
-            )
-        );
-        emit WeaponDecommissioned(_weaponId);
     }
 }

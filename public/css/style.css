@@ -1,0 +1,79 @@
+/* Add this to your existing style.css file */
+
+/* Reset margin and padding for all elements */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  /* Apply a font to the whole body */
+  body {
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Style for the main heading */
+  h1 {
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+  
+  /* Styles for the weapons list table */
+  #weaponsList {
+    width: 100%;
+    margin-top: 20px;
+  }
+  
+  #weaponsList table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  #weaponsList th, #weaponsList td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  
+  #weaponsList th {
+    background-color: #4CAF50;
+    color: white;
+  }
+  
+  #weaponsList tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+  
+  #weaponsList tr:hover {
+    background-color: #ddd;
+  }
+
+  /* Modal styles */
+.modal {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .modal-content {
+    background-color: #fefefe;
+    padding: 20px;
+    border-radius: 5px;
+    width: 30%;
+    min-width: 300px;
+  }
+  
+  .close-button {
+    float: right;
+    font-size: 1.5em;
+    cursor: pointer;
+  }
+  
+  

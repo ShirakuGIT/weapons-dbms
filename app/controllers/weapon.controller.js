@@ -8,7 +8,7 @@ const web3 = new Web3('http://127.0.0.1:7545'); // Connect to the Ganache RPC UR
 
 // Assuming the ABI and contract address are set up correctly.
 const contractABI = require('../../build/contracts/WeaponRegistry.json').abi;
-const contractAddress = '0x1B94A153CBBc6fEb9A210f3E85C3DeF41b688b57'; // The current contract address
+const contractAddress = '0x74bDB248004234506A469e16225aE63B722bb961'; // The current contract address
 const contract = new web3.eth.Contract(contractABI, contractAddress);
 
 // Helper function to get the default account
@@ -26,6 +26,15 @@ async function decommissionWeaponBlockchain(weaponId) {
     });
 
     return receipt;
+}
+
+// retrieve transaction data based on weapon ID or other identifiers
+async function getBlockchainData(weaponId) {
+    const receipt = await contract.methods.getWeaponDetails(weaponId).call();
+    return {
+        transactionHash: receipt.transactionHash,
+        // other details you might need
+    };
 }
 
 
@@ -65,6 +74,7 @@ exports.create = async (req, res) => {
 };
 
 // Retrieve all Weapons from the database
+// Retrieve all Weapons from the database
 exports.findAll = (req, res) => {
     Weapon.findAll()
         .then(weapons => {
@@ -75,7 +85,8 @@ exports.findAll = (req, res) => {
                 message: err.message || "Some error occurred while retrieving weapons."
             });
         });
-};
+};;
+
 
 // Find a single Weapon with an id
 exports.findOne = (req, res) => {
