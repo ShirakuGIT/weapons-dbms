@@ -3,36 +3,77 @@ const db = require("../models");
 const Weapon = db.weapon;
 const transactionController = require("../controllers/transaction.controller");
 
+const { Web3 } = require('web3');
+const web3 = new Web3('http://127.0.0.1:7545'); // Connect to the Ganache RPC URL
 
-// Assuming your create function looks something like this
-exports.create = (req, res) => {
-    // Extract type_id, serial_number, and other required fields from the request body
+// Assuming the ABI and contract address are set up correctly.
+const contractABI = require('../../build/contracts/WeaponRegistry.json').abi;
+const contractAddress = '0x9B4193A97005EdD49Dd38d38F89B1E231D2634F7'; // The current contract address
+const contract = new web3.eth.Contract(contractABI, contractAddress);
+
+// Helper function to get the default account
+async function getDefaultAccount() {
+    const accounts = await web3.eth.getAccounts();
+    return accounts[0];
+}
+
+// Function to call the smart contract to delete a weapon
+async function decommissionWeaponBlockchain(weaponId) {
+    const accounts = await web3.eth.getAccounts();
+    const receipt = await contract.methods.decommissionWeapon(weaponId).send({
+        from: accounts[0],
+        gas: 1000000
+    });
+
+    return receipt;
+}
+
+// retrieve transaction data based on weapon ID or other identifiers
+async function getBlockchainData(weaponId) {
+    const receipt = await contract.methods.getWeaponDetails(weaponId).call();
+    return {
+        transactionHash: receipt.transactionHash,
+        // other details you might need
+    };
+}
+
+
+
+// Integration with create function
+exports.create = async (req, res) => {
     const { type_id, serial_number, manufacturer, model, caliber, current_location, status } = req.body;
 
-    // Validate request
     if (!type_id || !serial_number) {
         res.status(400).send({ message: "type_id and serial_number are required fields." });
         return;
     }
 
-    // Create a Weapon
-    Weapon.create({
-        type_id,
-        serial_number,
-        manufacturer,
-        model,
-        caliber,
-        current_location,
-        status
-    })
-    .then(weapon => {
+    try {
+        const fromAccount = await getDefaultAccount();
+        const receipt = await contract.methods.registerWeapon(
+            type_id, serial_number, manufacturer, model, caliber, current_location, status
+        ).send({ from: fromAccount, gas: 1000000 }); // Adjust gas as needed
+
+        console.log('Blockchain transaction successful:', receipt);
+
+        // Proceed to create weapon in the PostgreSQL database
+        const weapon = await Weapon.create({
+            type_id,
+            serial_number,
+            manufacturer,
+            model,
+            caliber,
+            current_location,
+            status
+        });
         res.status(201).send(weapon);
-    })
-    .catch(err => {
+    } catch (err) {
+        console.error('Failed to create weapon:', err);
         res.status(500).send({ message: err.message || "Some error occurred while creating the Weapon." });
-    });
+    }
 };
 
+// Retrieve all Weapons from the database
 // Retrieve all Weapons from the database
 exports.findAll = (req, res) => {
     Weapon.findAll()
@@ -44,7 +85,8 @@ exports.findAll = (req, res) => {
                 message: err.message || "Some error occurred while retrieving weapons."
             });
         });
-};
+};;
+
 
 // Find a single Weapon with an id
 exports.findOne = (req, res) => {
@@ -61,13 +103,13 @@ exports.findOne = (req, res) => {
         });
 };
 
+// Integration with update function
 exports.update = async (req, res) => {
-    const id = parseInt(req.params.weapon_id, 10); // Parse the weapon_id to integer    
+    const id = parseInt(req.params.weapon_id, 10);    
     console.log(id);
+
     try {
         const weaponToUpdate = await Weapon.findByPk(id);
-        console.log(`Updating weapon with ID: ${id}`);
-
         if (!weaponToUpdate) {
             console.log(`Weapon with id=${id} was not found.`);
             return res.status(404).send({
@@ -78,29 +120,27 @@ exports.update = async (req, res) => {
         const statusBeforeUpdate = weaponToUpdate.status;
         console.log(`Previous status: ${statusBeforeUpdate}`);
 
-        const [num] = await Weapon.update(req.body, {
-            where: { weapon_id: id }
-        });
-
+        const [num] = await Weapon.update(req.body, { where: { weapon_id: id } });
         console.log(`Logging transaction...`);
         await transactionController.create({
             weapon_id: id,
-            user_id: req.body.user_id, // Make sure this is correctly populated
+            user_id: req.body.user_id,
             transaction_type: 'Status Update',
             timestamp: new Date(),
             notes: `Status changed from ${statusBeforeUpdate} to ${req.body.status}`,
         });
 
         if (num === 1) {
-            console.log(`Weapon with ID: ${id} was updated successfully.`);
-            res.send({
-                message: "Weapon was updated successfully."
-            });
+            const fromAccount = await getDefaultAccount();
+            const receipt = await contract.methods.updateWeaponStatus(
+                id, req.body.user_id, req.body.status, 'Status Update'
+            ).send({ from: fromAccount, gas: 1000000 });
+
+            console.log('Blockchain transaction successful:', receipt);
+            res.send({ message: "Weapon was updated successfully." });
         } else {
             console.log(`No changes made to the weapon with ID: ${id}.`);
-            res.send({
-                message: `Cannot update Weapon with id=${id}.`
-            });
+            res.send({ message: `Cannot update Weapon with id=${id}.` });
         }
     } catch (err) {
         console.error(`Error updating weapon with ID: ${id}`, err);
@@ -112,28 +152,42 @@ exports.update = async (req, res) => {
 
 
 
-
 // Delete a Weapon with the specified id in the request
-exports.delete = (req, res) => {
-    const id = req.params.id;
+exports.delete = async (req, res) => {
+    const id = parseInt(req.params.weapon_id, 10);
 
-    Weapon.destroy({
-        where: { id: id }
-    })
-        .then(num => {
-            if (num == 1) {
+    try {
+        // Update the weapon's status in the database to 'decommissioned'
+        const [updated] = await Weapon.update({ status: 'decommissioned' }, {
+            where: { weapon_id: id }
+        });
+
+        if (updated) {
+            try {
+                // If successfully updated, proceed to blockchain decommission
+                const blockchainReceipt = await decommissionWeaponBlockchain(id);
+                console.log('Blockchain decommission transaction receipt:', blockchainReceipt);
                 res.send({
-                    message: "Weapon was deleted successfully!"
+                    message: "Weapon was successfully decommissioned!"
                 });
-            } else {
-                res.send({
-                    message: `Cannot delete Weapon with id=${id}. Maybe Weapon was not found!`
+            } catch (blockchainError) {
+                // Handle blockchain-specific errors if decommission fails
+                console.error("Blockchain decommissioning failed:", blockchainError);
+                res.status(500).send({
+                    message: "Failed to decommission weapon on blockchain: " + blockchainError.message
                 });
             }
-        })
-        .catch(err => {
-            res.status(500).send({
-                message: "Could not delete Weapon with id=" + id
+        } else {
+            res.status(404).send({
+                message: "Weapon not found or already decommissioned."
             });
+        }
+    } catch (err) {
+        console.error("Error updating weapon status:", err);
+        res.status(500).send({
+            message: "Could not update Weapon status with id=" + id
         });
+    }
 };
+
+
