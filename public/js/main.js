@@ -36,6 +36,7 @@ function fetchWeapons() {
   });
 }
 
+
 function updateWeaponsList(weapons) {
   const weaponsList = document.getElementById('weaponsList');
   if (!weaponsList) return; // Exit if weaponsList does not exist on the page
@@ -95,42 +96,125 @@ document.getElementById('updateWeapon').addEventListener('click', function() {
   const weaponId = prompt("Enter the ID of the weapon to update:");
   if (!weaponId) return;
 
-  openModal('Update Weapon', {
-    action: `http://localhost:9000/api/weapons/${weaponId}`,
-    method: 'PUT',
-    inputs: [
-      { id: 'user_id', placeholder: 'User ID', type: 'number', value: 1 }, // You might need a proper way to get the current user's ID
-      { id: 'type_id', placeholder: 'Type ID', type: 'number', value: 1 },
-      { id: 'serial_number', placeholder: 'Serial Number', type: 'text', value: 'DEF67890' },
-      { id: 'manufacturer', placeholder: 'Manufacturer', type: 'text', value: 'Updated Manufacturer' },
-      { id: 'model', placeholder: 'Model', type: 'text', value: 'Updated Model' },
-      { id: 'caliber', placeholder: 'Caliber', type: 'text', value: '7.62mm' },
-      { id: 'current_location', placeholder: 'Current Location', type: 'text', value: 'Armory' },
-      { id: 'status', placeholder: 'Status', type: 'text', value: 'Out of Stock' }
-    ]
-  });
-})
+  // Open modal with form inputs
+  openUpdateWeaponModal(weaponId);
+});
 
-document.getElementById('deleteWeapon').addEventListener('click', function(){
-  const weaponId = prompt("Enter the ID of the weapon to delete:");
+function openUpdateWeaponModal(weaponId) {
+  const modal = document.getElementById('modal');
+  const form = document.getElementById('modal-form');
+  modal.style.display = 'block';
+
+  // Populate form with existing weapon data if needed or provide empty inputs
+  form.innerHTML = `
+    <input type="number" id="user_id" value="1" placeholder="User ID (assumed)">
+    <input type="number" id="type_id" placeholder="Type ID">
+    <input type="text" id="serial_number" placeholder="Serial Number">
+    <input type="text" id="manufacturer" placeholder="Manufacturer">
+    <input type="text" id="model" placeholder="Model">
+    <input type="text" id="caliber" placeholder="Caliber">
+    <input type="text" id="current_location" placeholder="Current Location">
+    <input type="text" id="status" placeholder="Status">
+    <button type="button" onclick="submitWeaponUpdate(${weaponId})">Update Weapon</button>
+  `;
+
+  // Close button to hide modal
+  const closeButton = document.createElement('button');
+  closeButton.textContent = 'Cancel';
+  closeButton.onclick = function() { modal.style.display = 'none'; };
+  form.appendChild(closeButton);
+}
+
+function submitWeaponUpdate(weaponId) {
+  const accessToken = sessionStorage.getItem('accessToken');
+  if (!accessToken) {
+      console.error('No access token found');
+      return;
+  }
+
+  const data = {
+      user_id: document.getElementById('user_id').value,
+      type_id: document.getElementById('type_id').value,
+      serial_number: document.getElementById('serial_number').value,
+      manufacturer: document.getElementById('manufacturer').value,
+      model: document.getElementById('model').value,
+      caliber: document.getElementById('caliber').value,
+      current_location: document.getElementById('current_location').value,
+      status: document.getElementById('status').value
+  };
+
+  fetch(`http://localhost:9000/api/weapons/${weaponId}`, {
+      method: 'PUT',
+      headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + accessToken
+      },
+      body: JSON.stringify(data)
+  })
+  .then(response => response.json())
+  .then(data => {
+      alert('Weapon updated successfully!');
+      fetchWeapons(); // Update the weapons list
+      document.getElementById('modal').style.display = 'none'; // Close the modal
+  })
+  .catch(error => {
+      alert('Error updating weapon: ' + error.message);
+  });
+}
+
+document.getElementById('deleteWeapon').addEventListener('click', function() {
+  const weaponId = prompt("Enter the ID of the weapon to decommission:");
   if (!weaponId) return;
 
-  if (confirm(`Are you sure you want to delete weapon with ID ${weaponId}?`)) {
-    fetch(`http://localhost:9000/api/weapons/${weaponId}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': 'Bearer ' + sessionStorage.getItem('accessToken') }
-    })
-    .then(response => response.json())
-    .then(data => {
-      alert(data.message || 'Weapon deleted successfully.');
-      fetchWeapons();
-    })
-    .catch(error => {
-      alert('Error deleting weapon: ' + error.message);
-    });
+  // User confirmation to proceed with decommissioning
+  if (confirm(`Are you sure you want to decommission weapon with ID ${weaponId}?`)) {
+      openDecommissionWeaponModal(weaponId);
   }
-})
+});
 
+function openDecommissionWeaponModal(weaponId) {
+  const modal = document.getElementById('modal');
+  modal.style.display = 'block';
+
+  const form = document.getElementById('modal-form');
+  form.innerHTML = `
+    <h3>Decommission Weapon</h3>
+    <p>Are you sure you want to decommission this weapon?</p>
+    <button type="button" onclick="submitWeaponDecommission(${weaponId})">Decommission Weapon</button>
+    <button type="button" onclick="closeModal()">Cancel</button>
+  `;
+}
+
+function submitWeaponDecommission(weaponId) {
+  const accessToken = sessionStorage.getItem('accessToken');
+  if (!accessToken) {
+      console.error('No access token found');
+      return;
+  }
+
+  fetch(`http://localhost:9000/api/weapons/${weaponId}`, {
+      method: 'POST', // Using POST as an example, adjust according to your API method settings
+      headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + accessToken
+      },
+      body: JSON.stringify({ status: "decommissioned" }) // Only changing the status
+  })
+  .then(response => {
+      if (!response.ok) {
+          throw new Error('Failed to decommission weapon due to network response.');
+      }
+      return response.json();
+  })
+  .then(data => {
+      alert(data.message || 'Weapon decommissioned successfully.');
+      fetchWeapons(); // Refresh the weapon list
+      closeModal(); // Close the modal
+  })
+  .catch(error => {
+      alert('Error decommissioning weapon: ' + error.message);
+  });
+}
 // Add listeners and openModal calls for updateWeapon and deleteWeapon here...
 
 function openModal(title, { action, method, inputs }) {
@@ -177,23 +261,23 @@ function handleModalFormSubmit(event) {
   const form = event.target;
 
   fetch(form.action, {
-    method: form.method,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + sessionStorage.getItem('accessToken')
-    },
-    body: JSON.stringify(Object.fromEntries(new FormData(form)))
+      method: form.method, // This should be PUT for update operation
+      headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + sessionStorage.getItem('accessToken')
+      },
+      body: JSON.stringify(Object.fromEntries(new FormData(form)))
   })
   .then(response => response.json())
   .then(data => {
-    if (data.message) {
-      alert(data.message);
-    }
-    fetchWeapons();
-    closeModal();
+      if (data.message) {
+          alert(data.message);
+      }
+      fetchWeapons();
+      closeModal();
   })
   .catch(error => {
-    alert('Error: ' + error.message);
+      alert('Error: ' + error.message);
   });
 }
 

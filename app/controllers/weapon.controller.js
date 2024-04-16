@@ -8,7 +8,7 @@ const web3 = new Web3('http://127.0.0.1:7545'); // Connect to the Ganache RPC UR
 
 // Assuming the ABI and contract address are set up correctly.
 const contractABI = require('../../build/contracts/WeaponRegistry.json').abi;
-const contractAddress = '0x74bDB248004234506A469e16225aE63B722bb961'; // The current contract address
+const contractAddress = '0x9B4193A97005EdD49Dd38d38F89B1E231D2634F7'; // The current contract address
 const contract = new web3.eth.Contract(contractABI, contractAddress);
 
 // Helper function to get the default account
@@ -152,23 +152,42 @@ exports.update = async (req, res) => {
 
 
 
-
 // Delete a Weapon with the specified id in the request
 exports.delete = async (req, res) => {
     const id = parseInt(req.params.weapon_id, 10);
 
     try {
-        // Decommission the weapon on the blockchain
-        const blockchainReceipt = await decommissionWeaponBlockchain(id);
-        console.log('Blockchain decommission transaction receipt:', blockchainReceipt);
-
-        res.send({
-            message: "Weapon was decommissioned successfully!"
+        // Update the weapon's status in the database to 'decommissioned'
+        const [updated] = await Weapon.update({ status: 'decommissioned' }, {
+            where: { weapon_id: id }
         });
+
+        if (updated) {
+            try {
+                // If successfully updated, proceed to blockchain decommission
+                const blockchainReceipt = await decommissionWeaponBlockchain(id);
+                console.log('Blockchain decommission transaction receipt:', blockchainReceipt);
+                res.send({
+                    message: "Weapon was successfully decommissioned!"
+                });
+            } catch (blockchainError) {
+                // Handle blockchain-specific errors if decommission fails
+                console.error("Blockchain decommissioning failed:", blockchainError);
+                res.status(500).send({
+                    message: "Failed to decommission weapon on blockchain: " + blockchainError.message
+                });
+            }
+        } else {
+            res.status(404).send({
+                message: "Weapon not found or already decommissioned."
+            });
+        }
     } catch (err) {
-        console.error("Error decommissioning weapon:", err);
+        console.error("Error updating weapon status:", err);
         res.status(500).send({
-            message: "Could not decommission Weapon with id=" + id
+            message: "Could not update Weapon status with id=" + id
         });
     }
 };
+
+

@@ -9,11 +9,12 @@ contract WeaponRegistry {
     );
     event WeaponStatusUpdated(
         uint indexed weaponId,
-        uint indexed userId,
+        address indexed userId,
         string transactionType,
         uint timestamp,
         string status
     );
+    event WeaponDecommissioned(uint indexed weaponId);
 
     struct Weapon {
         uint weaponId;
@@ -26,17 +27,8 @@ contract WeaponRegistry {
         string status;
     }
 
-    struct WeaponStatus {
-        uint weaponId;
-        uint userId;
-        string transactionType;
-        uint timestamp;
-        string status;
-    }
-
     Weapon[] public weapons;
-    WeaponStatus[] public statuses;
-    mapping(string => bool) private serialNumberExists; // Tracks if a serial number is already registered
+    mapping(string => bool) public serialNumberExists;
 
     function registerWeapon(
         uint _typeId,
@@ -50,53 +42,56 @@ contract WeaponRegistry {
         require(
             !serialNumberExists[_serialNumber],
             "Serial number already registered."
-        ); // Check for duplicate serial number
-        uint newWeaponId = weapons.length + 1;
-        weapons.push(
-            Weapon(
-                newWeaponId,
-                _typeId,
-                _serialNumber,
-                _manufacturer,
-                _model,
-                _caliber,
-                _currentLocation,
-                _status
-            )
         );
-        serialNumberExists[_serialNumber] = true; // Mark this serial number as registered
-        emit WeaponRegistered(newWeaponId, _typeId, _serialNumber);
-        return newWeaponId;
+
+        weapons.push(
+            Weapon({
+                weaponId: weapons.length + 1,
+                typeId: _typeId,
+                serialNumber: _serialNumber,
+                manufacturer: _manufacturer,
+                model: _model,
+                caliber: _caliber,
+                currentLocation: _currentLocation,
+                status: _status
+            })
+        );
+        serialNumberExists[_serialNumber] = true;
+        emit WeaponRegistered(weapons.length, _typeId, _serialNumber);
+        return weapons.length;
+    }
+
+    function decommissionWeapon(uint _weaponId) public {
+        require(
+            _weaponId > 0 && _weaponId <= weapons.length,
+            "Weapon ID does not exist."
+        );
+        Weapon storage weapon = weapons[_weaponId - 1];
+
+        require(
+            keccak256(abi.encodePacked(weapon.status)) !=
+                keccak256(abi.encodePacked("decommissioned")),
+            "Weapon already decommissioned."
+        );
+
+        weapon.status = "decommissioned";
+        emit WeaponDecommissioned(_weaponId);
     }
 
     function updateWeaponStatus(
         uint _weaponId,
-        uint _userId,
-        string memory _newStatus,
-        string memory _transactionType
+        string memory _newStatus
     ) public {
         require(
             _weaponId > 0 && _weaponId <= weapons.length,
             "Weapon ID does not exist."
         );
-        uint index = _weaponId - 1;
-
-        Weapon storage weapon = weapons[index];
+        Weapon storage weapon = weapons[_weaponId - 1];
         weapon.status = _newStatus;
-
-        statuses.push(
-            WeaponStatus(
-                _weaponId,
-                _userId,
-                _transactionType,
-                block.timestamp,
-                _newStatus
-            )
-        );
         emit WeaponStatusUpdated(
             _weaponId,
-            _userId,
-            _transactionType,
+            msg.sender,
+            "Status Update",
             block.timestamp,
             _newStatus
         );
