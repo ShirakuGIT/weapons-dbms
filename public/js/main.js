@@ -193,7 +193,7 @@ function submitWeaponDecommission(weaponId) {
   }
 
   fetch(`http://localhost:9000/api/weapons/${weaponId}`, {
-      method: 'POST', // Using POST as an example, adjust according to your API method settings
+      method: 'DELETE', // Using POST as an example, adjust according to your API method settings
       headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + accessToken
