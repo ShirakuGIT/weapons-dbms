@@ -9,6 +9,23 @@ Securus is a comprehensive weapon management system designed to ensure the highe
 - CRUD operations for weapon and transaction records in a PostgreSQL database.
 - API endpoints for managing weapons, transactions, and user roles.
 
+## Screenshots
+### Homepage
+
+![Screenshot 2024-07-17 at 15-11-49 Welcome - Securus](https://github.com/user-attachments/assets/98974c93-262c-4d1f-90f2-ea59dd1783b5)
+
+### Login
+![Screenshot 2024-07-17 at 15-11-58 Login - Securus](https://github.com/user-attachments/assets/74b71b5b-c03a-4106-9dd8-be6c3b74a2a4)
+
+### Register
+
+![Screenshot 2024-07-17 at 15-12-08 Register - Securus](https://github.com/user-attachments/assets/8af38ce0-b644-469a-bff2-3ac506dad748)
+
+### Main Page
+
+![Screenshot 2024-07-17 at 15-13-48 Main Page - Securus](https://github.com/user-attachments/assets/01073fa3-bf67-4ac5-97a7-371b988392e2)
+
+
 ## Technologies Used
 
 - Node.js and Express for the backend server.
