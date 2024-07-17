@@ -2,11 +2,93 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Main Page</title>
+    <title>Main Page - Securus</title>
     <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            margin: 0;
+        }
+        h1 {
+            color: #4CAF50;
+            margin-bottom: 1rem;
+        }
+        h2 {
+            margin-bottom: 1.5rem;
+        }
+        #adminPanel {
+            margin-bottom: 2rem;
+        }
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            background-color: #4CAF50;
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        table {
+            width: 100%;
+            max-width: 1000px;
+            border-collapse: collapse;
+            margin-top: 2rem;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #ddd;
+        }
+        .modal {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            padding: 20px;
+            border-radius: 5px;
+            width: 30%;
+            min-width: 300px;
+        }
+        .close-button {
+            float: right;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to the Weapon Management System</h1>
+    <h1>Securus</h1>
+    <h2>Welcome to the Weapon Management System</h2>
     <div id="adminPanel" style="display:none;">
         <button id="createWeaponType">Create Weapon Type</button>
         <button id="createWeapon">Create Weapon</button>
@@ -30,15 +112,15 @@
         </tbody>
     </table>
     <!-- Modal -->
-<div id="modal" class="modal" style="display:none;">
-    <div class="modal-content">
-      <span class="close-button" onclick="closeModal()">&times;</span>
-      <h2 id="modal-title">Create Weapon Type</h2>
-      <form id="modal-form">
-        <!-- The form inputs will be populated dynamically in JavaScript -->
-      </form>
+    <div id="modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <h2 id="modal-title">Create Weapon Type</h2>
+            <form id="modal-form">
+                <!-- The form inputs will be populated dynamically in JavaScript -->
+            </form>
+        </div>
     </div>
-  </div>
     <script src="../js/main.js"></script>
 </body>
 </html>

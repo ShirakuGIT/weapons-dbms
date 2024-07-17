@@ -8,7 +8,7 @@ const web3 = new Web3('http://127.0.0.1:7545'); // Connect to the Ganache RPC UR
 
 // Assuming the ABI and contract address are set up correctly.
 const contractABI = require('../../build/contracts/WeaponRegistry.json').abi;
-const contractAddress = '0x9B4193A97005EdD49Dd38d38F89B1E231D2634F7'; // The current contract address
+const contractAddress = '0xEA06CB2f70FfCD74aF5f86c1267428A07b01460E'; // The current contract address
 const contract = new web3.eth.Contract(contractABI, contractAddress);
 
 // Helper function to get the default account
@@ -105,7 +105,7 @@ exports.findOne = (req, res) => {
 
 // Integration with update function
 exports.update = async (req, res) => {
-    const id = parseInt(req.params.weapon_id, 10);    
+    const id = parseInt(req.params.weapon_id, 10);
     console.log(id);
 
     try {
@@ -119,6 +119,14 @@ exports.update = async (req, res) => {
 
         const statusBeforeUpdate = weaponToUpdate.status;
         console.log(`Previous status: ${statusBeforeUpdate}`);
+
+        // Ensure type_id is a valid integer
+        if (!req.body.type_id || isNaN(parseInt(req.body.type_id, 10))) {
+            console.error("Invalid type_id provided.");
+            return res.status(400).send({
+                message: "Invalid type_id provided."
+            });
+        }
 
         const [num] = await Weapon.update(req.body, { where: { weapon_id: id } });
         console.log(`Logging transaction...`);
@@ -149,6 +157,7 @@ exports.update = async (req, res) => {
         });
     }
 };
+
 
 
 

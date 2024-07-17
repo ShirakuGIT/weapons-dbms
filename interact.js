@@ -2,7 +2,7 @@ const { Web3 } = require('web3');
 const web3 = new Web3('http://127.0.0.1:7545'); // Connect to the Ganache RPC URL
 
 const contractABI = require('./build/contracts/WeaponRegistry.json').abi;
-const contractAddress = '0x5325A9189a9eDBE8682B6b9f51825Ba20E7e1423'; // The current contract address
+const contractAddress = '0xEA06CB2f70FfCD74aF5f86c1267428A07b01460E'; // The current contract address
 
 const contract = new web3.eth.Contract(contractABI, contractAddress);
 
